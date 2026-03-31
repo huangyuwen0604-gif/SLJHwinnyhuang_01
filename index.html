@@ -7,263 +7,54 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Caveat:wght@500;700&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
+:root{--ink:#1a1a2e;--wall:#faf7f2;--shadow:rgba(0,0,0,0.13);}
+body{background:var(--wall);color:var(--ink);font-family:'Noto Sans TC',sans-serif;min-height:100vh;overflow-x:hidden;}
+body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23g)' opacity='.035'/%3E%3C/svg%3E");opacity:.7;}
 
-:root{
-  --ink:#1a1a2e;
-  --wall:#faf7f2;
-  --tape:#fde68a;
-  --shadow:rgba(0,0,0,0.13);
-}
+.header{position:relative;z-index:10;padding:28px 32px 20px;display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap;border-bottom:2px dashed rgba(0,0,0,0.1);}
+.header-left h1{font-family:'Caveat',cursive;font-size:clamp(28px,4vw,44px);font-weight:700;line-height:1;margin-bottom:4px;}
+.header-left h1 span{display:inline-block;background:#fb7185;color:#fff;padding:0 10px;transform:rotate(-1deg);border-radius:4px;}
+.header-left p{font-size:13px;color:#64748b;margin-top:6px;}
+.header-right{display:flex;flex-direction:column;align-items:flex-end;gap:4px;}
+.note-count{font-family:'Caveat',cursive;font-size:18px;color:#94a3b8;}
+.sync-status{font-size:11px;color:#94a3b8;display:flex;align-items:center;gap:5px;}
+.sync-dot{width:7px;height:7px;border-radius:50%;background:#94a3b8;transition:background .3s;}
+.sync-dot.live{background:#22c55e;box-shadow:0 0 6px rgba(34,197,94,.5);}
+.sync-dot.error{background:#fb7185;}
+.sync-dot.loading{animation:pulse .8s ease-in-out infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
 
-body{
-  background:var(--wall);
-  color:var(--ink);
-  font-family:'Noto Sans TC',sans-serif;
-  min-height:100vh;
-  overflow-x:hidden;
-  cursor:default;
-}
-
-/* ── grain texture overlay ── */
-body::after{
-  content:'';
-  position:fixed;inset:0;
-  pointer-events:none;z-index:0;
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23g)' opacity='.035'/%3E%3C/svg%3E");
-  opacity:.7;
-}
-
-/* ── header ── */
-.header{
-  position:relative;z-index:10;
-  padding:28px 32px 20px;
-  display:flex;align-items:flex-end;justify-content:space-between;gap:20px;
-  flex-wrap:wrap;
-  border-bottom:2px dashed rgba(0,0,0,0.1);
-}
-
-.header-left h1{
-  font-family:'Caveat',cursive;
-  font-size:clamp(28px,4vw,44px);
-  font-weight:700;
-  color:var(--ink);
-  line-height:1;
-  margin-bottom:4px;
-}
-
-.header-left h1 span{
-  display:inline-block;
-  background:#fb7185;
-  color:#fff;
-  padding:0 10px;
-  transform:rotate(-1deg);
-  border-radius:4px;
-}
-
-.header-left p{
-  font-size:13px;
-  color:#64748b;
-  margin-top:6px;
-}
-
-.note-count{
-  font-family:'Caveat',cursive;
-  font-size:18px;
-  color:#94a3b8;
-  white-space:nowrap;
-}
-
-/* ── prompt bar ── */
-.prompts{
-  position:relative;z-index:10;
-  display:flex;gap:8px;
-  padding:14px 32px;
-  overflow-x:auto;
-  border-bottom:1px solid rgba(0,0,0,0.07);
-  scrollbar-width:none;
-}
+.prompts{position:relative;z-index:10;display:flex;gap:8px;padding:14px 32px;overflow-x:auto;border-bottom:1px solid rgba(0,0,0,0.07);scrollbar-width:none;}
 .prompts::-webkit-scrollbar{display:none;}
+.prompt-chip{flex-shrink:0;font-size:12px;padding:6px 14px;border-radius:99px;border:1.5px solid rgba(0,0,0,0.15);background:#fff;color:#475569;cursor:pointer;transition:all .15s;font-family:'Noto Sans TC',sans-serif;white-space:nowrap;}
+.prompt-chip:hover{border-color:#fb7185;color:#be123c;background:#fff1f2;transform:translateY(-1px);}
 
-.prompt-chip{
-  flex-shrink:0;
-  font-size:12px;
-  padding:6px 14px;
-  border-radius:99px;
-  border:1.5px solid rgba(0,0,0,0.15);
-  background:#fff;
-  color:#475569;
-  cursor:pointer;
-  transition:all .15s;
-  font-family:'Noto Sans TC',sans-serif;
-  white-space:nowrap;
-}
-.prompt-chip:hover{
-  border-color:#fb7185;
-  color:#be123c;
-  background:#fff1f2;
-  transform:translateY(-1px);
-}
-
-/* ── input zone ── */
-.input-zone{
-  position:relative;z-index:10;
-  padding:20px 32px;
-  display:flex;gap:12px;align-items:flex-end;
-  border-bottom:2px dashed rgba(0,0,0,0.1);
-}
-
-.input-wrap{
-  flex:1;
-  position:relative;
-}
-
-.name-input{
-  width:140px;
-  padding:10px 14px;
-  border:2px solid rgba(0,0,0,0.12);
-  border-radius:12px;
-  font-size:14px;
-  font-family:'Noto Sans TC',sans-serif;
-  background:#fff;
-  outline:none;
-  color:var(--ink);
-  transition:border-color .2s;
-}
+.input-zone{position:relative;z-index:10;padding:20px 32px;display:flex;gap:12px;align-items:flex-end;border-bottom:2px dashed rgba(0,0,0,0.1);}
+.name-input{width:140px;padding:10px 14px;border:2px solid rgba(0,0,0,0.12);border-radius:12px;font-size:14px;font-family:'Noto Sans TC',sans-serif;background:#fff;outline:none;color:var(--ink);transition:border-color .2s;flex-shrink:0;}
 .name-input:focus{border-color:#fb7185;}
 .name-input::placeholder{color:#cbd5e1;}
-
-.idea-input{
-  width:100%;
-  min-height:62px;
-  max-height:120px;
-  padding:12px 16px;
-  border:2px solid rgba(0,0,0,0.12);
-  border-radius:12px;
-  font-size:15px;
-  font-family:'Caveat',cursive;
-  font-weight:500;
-  line-height:1.5;
-  background:#fff;
-  outline:none;
-  resize:vertical;
-  color:var(--ink);
-  transition:border-color .2s, box-shadow .2s;
-}
-.idea-input:focus{
-  border-color:#2dd4bf;
-  box-shadow:0 0 0 3px rgba(45,212,191,0.15);
-}
+.input-wrap{flex:1;position:relative;}
+.idea-input{width:100%;min-height:62px;max-height:120px;padding:12px 16px;border:2px solid rgba(0,0,0,0.12);border-radius:12px;font-size:15px;font-family:'Caveat',cursive;font-weight:500;line-height:1.5;background:#fff;outline:none;resize:vertical;color:var(--ink);transition:border-color .2s,box-shadow .2s;}
+.idea-input:focus{border-color:#2dd4bf;box-shadow:0 0 0 3px rgba(45,212,191,0.15);}
 .idea-input::placeholder{color:#cbd5e1;}
+.char-hint{position:absolute;right:10px;bottom:8px;font-size:11px;color:#94a3b8;font-family:'Noto Sans TC',sans-serif;}
+.post-btn{flex-shrink:0;padding:14px 28px;background:linear-gradient(135deg,#fb7185,#f43f5e);color:#fff;border:none;border-radius:14px;font-size:15px;font-family:'Caveat',cursive;font-weight:700;cursor:pointer;transition:transform .15s,box-shadow .15s,opacity .15s;box-shadow:0 4px 14px rgba(244,63,94,.3);white-space:nowrap;}
+.post-btn:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 7px 20px rgba(244,63,94,.4);}
+.post-btn:active:not(:disabled){transform:scale(.97);}
+.post-btn:disabled{opacity:.5;cursor:not-allowed;}
 
-.char-hint{
-  position:absolute;
-  right:10px;bottom:8px;
-  font-size:11px;
-  color:#94a3b8;
-  font-family:'Noto Sans TC',sans-serif;
-}
-
-.post-btn{
-  flex-shrink:0;
-  padding:14px 28px;
-  background:linear-gradient(135deg,#fb7185,#f43f5e);
-  color:#fff;
-  border:none;
-  border-radius:14px;
-  font-size:15px;
-  font-family:'Caveat',cursive;
-  font-weight:700;
-  cursor:pointer;
-  transition:transform .15s, box-shadow .15s;
-  box-shadow:0 4px 14px rgba(244,63,94,.3);
-  white-space:nowrap;
-}
-.post-btn:hover{transform:translateY(-2px);box-shadow:0 7px 20px rgba(244,63,94,.4);}
-.post-btn:active{transform:scale(.97);}
-
-/* ── wall ── */
-.wall{
-  position:relative;
-  min-height:calc(100vh - 280px);
-  padding:28px 24px 80px;
-  z-index:5;
-}
-
-.wall-empty{
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  min-height:300px;
-  gap:12px;
-  color:#cbd5e1;
-  font-family:'Caveat',cursive;
-  font-size:20px;
-}
-.wall-empty .arrow{
-  font-size:36px;
-  animation:bob 1.8s ease-in-out infinite;
-}
+.wall{position:relative;min-height:calc(100vh - 280px);padding:28px 24px 80px;z-index:5;}
+.wall-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:300px;gap:12px;color:#cbd5e1;font-family:'Caveat',cursive;font-size:20px;}
+.wall-empty .arrow{font-size:36px;animation:bob 1.8s ease-in-out infinite;}
 @keyframes bob{0%,100%{transform:translateY(0);}50%{transform:translateY(-8px);}}
 
-/* ── sticky note ── */
-.note{
-  position:absolute;
-  width:clamp(160px,22vw,210px);
-  padding:18px 16px 14px;
-  border-radius:3px;
-  cursor:default;
-  transition:transform .2s ease, box-shadow .2s ease, z-index 0s;
-  animation:dropIn .4s cubic-bezier(.34,1.4,.64,1) both;
-  will-change:transform;
-}
-
-@keyframes dropIn{
-  from{opacity:0;transform:var(--base-rot) translateY(-30px) scale(.85);}
-  to{opacity:1;transform:var(--base-rot) translateY(0) scale(1);}
-}
-
-.note:hover{
-  transform:var(--base-rot) scale(1.06);
-  box-shadow:0 12px 32px rgba(0,0,0,0.18)!important;
-  z-index:50!important;
-}
-
-/* tape strip at top */
-.note::before{
-  content:'';
-  position:absolute;
-  top:-10px;left:50%;
-  transform:translateX(-50%);
-  width:44px;height:20px;
-  background:rgba(253,230,138,0.75);
-  border-radius:2px;
-  box-shadow:0 1px 3px rgba(0,0,0,0.1);
-}
-
-.note-author{
-  font-size:11px;
-  font-family:'Noto Sans TC',sans-serif;
-  font-weight:500;
-  opacity:.55;
-  margin-bottom:8px;
-  letter-spacing:.04em;
-}
-
-.note-text{
-  font-family:'Caveat',cursive;
-  font-size:clamp(15px,2.2vw,18px);
-  font-weight:500;
-  line-height:1.55;
-  word-break:break-word;
-}
-
-.note-time{
-  margin-top:10px;
-  font-size:10px;
-  font-family:'Noto Sans TC',sans-serif;
-  opacity:.35;
-  text-align:right;
-}
-
-/* note colors */
+.note{position:absolute;width:clamp(160px,22vw,210px);padding:18px 16px 14px;border-radius:3px;cursor:default;transition:transform .2s ease,box-shadow .2s ease;animation:dropIn .4s cubic-bezier(.34,1.4,.64,1) both;will-change:transform;}
+@keyframes dropIn{from{opacity:0;transform:var(--base-rot) translateY(-30px) scale(.85);}to{opacity:1;transform:var(--base-rot) translateY(0) scale(1);}}
+.note:hover{transform:var(--base-rot) scale(1.06);box-shadow:0 12px 32px rgba(0,0,0,0.18)!important;z-index:50!important;}
+.note::before{content:'';position:absolute;top:-10px;left:50%;transform:translateX(-50%);width:44px;height:20px;background:rgba(253,230,138,0.75);border-radius:2px;box-shadow:0 1px 3px rgba(0,0,0,0.1);}
+.note-author{font-size:11px;font-family:'Noto Sans TC',sans-serif;font-weight:500;opacity:.55;margin-bottom:8px;letter-spacing:.04em;}
+.note-text{font-family:'Caveat',cursive;font-size:clamp(15px,2.2vw,18px);font-weight:500;line-height:1.55;word-break:break-word;}
+.note-time{margin-top:10px;font-size:10px;font-family:'Noto Sans TC',sans-serif;opacity:.35;text-align:right;}
 .nc0{background:#fef9c3;color:#713f12;box-shadow:4px 5px 14px var(--shadow);}
 .nc1{background:#dcfce7;color:#14532d;box-shadow:4px 5px 14px var(--shadow);}
 .nc2{background:#ffe4e6;color:#881337;box-shadow:4px 5px 14px var(--shadow);}
@@ -273,60 +64,36 @@ body::after{
 .nc6{background:#cffafe;color:#164e63;box-shadow:4px 5px 14px var(--shadow);}
 .nc7{background:#fce7f3;color:#831843;box-shadow:4px 5px 14px var(--shadow);}
 
-/* ── toast ── */
-.toast{
-  position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(80px);
-  background:var(--ink);color:#fff;
-  padding:10px 22px;border-radius:99px;font-size:13px;
-  font-family:'Noto Sans TC',sans-serif;
-  transition:transform .3s cubic-bezier(.34,1.4,.64,1);
-  z-index:200;pointer-events:none;white-space:nowrap;
-}
-.toast.show{transform:translateX(-50%) translateY(0);}
-
-/* ── view toggle ── */
-.view-toggle{
-  position:fixed;bottom:28px;right:28px;
-  display:flex;gap:8px;z-index:100;
-}
-.vbtn{
-  padding:10px 18px;border-radius:99px;border:2px solid rgba(0,0,0,.15);
-  background:#fff;color:#475569;font-size:12px;font-weight:500;
-  font-family:'Noto Sans TC',sans-serif;
-  cursor:pointer;transition:all .15s;
-  box-shadow:0 2px 8px rgba(0,0,0,.08);
-}
-.vbtn.active{background:var(--ink);color:#fff;border-color:var(--ink);}
-.vbtn:hover:not(.active){border-color:#fb7185;color:#be123c;}
-
-/* ── list view ── */
-.list-view{
-  display:none;
-  max-width:680px;margin:0 auto;
-  padding:24px 24px 80px;
-  position:relative;z-index:5;
-}
+.list-view{display:none;max-width:680px;margin:0 auto;padding:24px 24px 80px;position:relative;z-index:5;}
 .list-view.active{display:block;}
 .wall.list-hidden{display:none;}
-
-.list-item{
-  display:flex;gap:14px;align-items:flex-start;
-  padding:14px 18px;
-  border-radius:14px;
-  background:#fff;
-  border:1.5px solid rgba(0,0,0,.07);
-  margin-bottom:10px;
-  animation:slideIn .3s ease both;
-}
+.list-item{display:flex;gap:14px;align-items:flex-start;padding:14px 18px;border-radius:14px;background:#fff;border:1.5px solid rgba(0,0,0,.07);margin-bottom:10px;animation:slideIn .3s ease both;}
 @keyframes slideIn{from{opacity:0;transform:translateX(-12px);}to{opacity:1;transform:translateX(0);}}
-
-.list-dot{
-  width:14px;height:14px;border-radius:50%;flex-shrink:0;margin-top:3px;
-}
+.list-dot{width:14px;height:14px;border-radius:50%;flex-shrink:0;margin-top:3px;}
 .list-author{font-size:12px;color:#94a3b8;margin-bottom:4px;font-weight:500;}
 .list-text{font-size:15px;color:var(--ink);line-height:1.6;font-family:'Caveat',cursive;font-weight:500;}
 
-/* mobile */
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--ink);color:#fff;padding:10px 22px;border-radius:99px;font-size:13px;font-family:'Noto Sans TC',sans-serif;transition:transform .3s cubic-bezier(.34,1.4,.64,1);z-index:200;pointer-events:none;white-space:nowrap;}
+.toast.show{transform:translateX(-50%) translateY(0);}
+
+.view-toggle{position:fixed;bottom:28px;right:28px;display:flex;gap:8px;z-index:100;}
+.vbtn{padding:10px 18px;border-radius:99px;border:2px solid rgba(0,0,0,.15);background:#fff;color:#475569;font-size:12px;font-weight:500;font-family:'Noto Sans TC',sans-serif;cursor:pointer;transition:all .15s;box-shadow:0 2px 8px rgba(0,0,0,.08);}
+.vbtn.active{background:var(--ink);color:#fff;border-color:var(--ink);}
+.vbtn:hover:not(.active){border-color:#fb7185;color:#be123c;}
+
+.setup-banner{position:fixed;inset:0;background:rgba(15,15,30,.85);display:flex;align-items:center;justify-content:center;z-index:300;backdrop-filter:blur(6px);}
+.setup-box{background:#fff;border-radius:24px;padding:36px 40px;max-width:480px;width:90%;text-align:center;animation:bounceIn .5s cubic-bezier(.34,1.4,.64,1);}
+@keyframes bounceIn{from{opacity:0;transform:scale(.85);}to{opacity:1;transform:scale(1);}}
+.setup-box h2{font-family:'Caveat',cursive;font-size:26px;font-weight:700;margin-bottom:8px;color:var(--ink);}
+.setup-box p{font-size:13px;color:#64748b;line-height:1.7;margin-bottom:20px;}
+.setup-input{width:100%;padding:12px 16px;border:2px solid #e2e8f0;border-radius:12px;font-size:13px;font-family:'Noto Sans TC',sans-serif;outline:none;color:var(--ink);margin-bottom:12px;transition:border-color .2s;}
+.setup-input:focus{border-color:#2dd4bf;}
+.setup-input::placeholder{color:#cbd5e1;}
+.setup-btn{width:100%;padding:13px;border-radius:12px;border:none;background:linear-gradient(135deg,#2dd4bf,#60a5fa);color:#fff;font-family:'Caveat',cursive;font-weight:700;font-size:17px;cursor:pointer;transition:opacity .15s;}
+.setup-btn:hover{opacity:.88;}
+.setup-skip{margin-top:10px;font-size:12px;color:#94a3b8;cursor:pointer;text-decoration:underline;}
+.setup-skip:hover{color:#475569;}
+
 @media(max-width:560px){
   .header{padding:20px 16px 14px;}
   .input-zone{padding:14px 16px;flex-wrap:wrap;}
@@ -339,16 +106,31 @@ body::after{
 </head>
 <body>
 
-<!-- HEADER -->
+<div class="setup-banner" id="setupBanner">
+  <div class="setup-box">
+    <div style="font-size:40px;margin-bottom:12px;">🗂️</div>
+    <h2>設定 Google 試算表連線</h2>
+    <p>請貼上你的 Google Apps Script 部署網址（Web App URL），<br>學生的便利貼就會即時存入試算表。</p>
+    <input class="setup-input" id="gasUrlInput" type="text" placeholder="https://script.google.com/macros/s/…/exec">
+    <button class="setup-btn" onclick="saveGasUrl()">✦ 開始使用</button>
+    <div class="setup-skip" onclick="skipSetup()">先跳過，使用本機模式（不儲存到試算表）</div>
+  </div>
+</div>
+
 <div class="header">
   <div class="header-left">
     <h1>什麼是<span>特權</span>？</h1>
     <p>把你的想法貼上來 — 沒有對錯，只有看見 👀</p>
   </div>
-  <div class="note-count" id="noteCount">0 張便利貼</div>
+  <div class="header-right">
+    <div class="note-count" id="noteCount">0 張便利貼</div>
+    <div class="sync-status">
+      <div class="sync-dot" id="syncDot"></div>
+      <span id="syncText">未連線</span>
+    </div>
+  </div>
 </div>
 
-<!-- PROMPT CHIPS -->
 <div class="prompts">
   <span class="prompt-chip" onclick="usePrompt(this)">特權是一種優勢，是……</span>
   <span class="prompt-chip" onclick="usePrompt(this)">我覺得特權跟努力的關係是……</span>
@@ -359,17 +141,15 @@ body::after{
   <span class="prompt-chip" onclick="usePrompt(this)">我不認同的是……</span>
 </div>
 
-<!-- INPUT ZONE -->
 <div class="input-zone">
   <input class="name-input" id="nameInput" type="text" placeholder="你的名字（選填）" maxlength="12">
   <div class="input-wrap">
     <textarea class="idea-input" id="ideaInput" placeholder="在這裡寫下你對「特權」的想法……" maxlength="120" oninput="updateChar()"></textarea>
     <div class="char-hint" id="charHint">0 / 120</div>
   </div>
-  <button class="post-btn" onclick="postNote()">貼上去 ✦</button>
+  <button class="post-btn" id="postBtn" onclick="postNote()">貼上去 ✦</button>
 </div>
 
-<!-- WALL VIEW -->
 <div class="wall" id="wall">
   <div class="wall-empty" id="wallEmpty">
     <div class="arrow">↑</div>
@@ -377,134 +157,192 @@ body::after{
   </div>
 </div>
 
-<!-- LIST VIEW -->
 <div class="list-view" id="listView"></div>
 
-<!-- VIEW TOGGLE -->
 <div class="view-toggle">
   <button class="vbtn active" id="btnWall" onclick="setView('wall')">🗂 牆面</button>
   <button class="vbtn" id="btnList" onclick="setView('list')">📋 列表</button>
 </div>
 
-<!-- TOAST -->
 <div class="toast" id="toast"></div>
 
 <script>
-const COLORS = ['nc0','nc1','nc2','nc3','nc4','nc5','nc6','nc7'];
-const DOT_COLORS = ['#ca8a04','#16a34a','#e11d48','#1d4ed8','#7c3aed','#ea580c','#0891b2','#db2777'];
-const notes = [];
-let currentView = 'wall';
+// ══════════════════════════════════════════════
+//  ★ 把你的 GAS URL 填在這裡
+// ══════════════════════════════════════════════
+const HARDCODED_GAS_URL = '';  // 例：'https://script.google.com/macros/s/AKfycb.../exec'
+
+const COLORS  = ['nc0','nc1','nc2','nc3','nc4','nc5','nc6','nc7'];
+const DOTCOLS = ['#ca8a04','#16a34a','#e11d48','#1d4ed8','#7c3aed','#ea580c','#0891b2','#db2777'];
+
+let gasUrl      = HARDCODED_GAS_URL || localStorage.getItem('gasUrl') || '';
+let notes       = [];
 let colorCursor = 0;
+let localMode   = false;
 
-// ── helpers ──────────────────────────────────────────────────
-function updateChar(){
-  const v = document.getElementById('ideaInput').value.length;
-  document.getElementById('charHint').textContent = v + ' / 120';
+window.addEventListener('load', () => {
+  if (gasUrl) { hideBanner(); init(); }
+});
+
+function saveGasUrl() {
+  const val = document.getElementById('gasUrlInput').value.trim();
+  if (!val.startsWith('https://script.google.com')) {
+    showToast('請貼上正確的 Apps Script URL ⚠️'); return;
+  }
+  gasUrl = val;
+  localStorage.setItem('gasUrl', gasUrl);
+  hideBanner(); init();
 }
 
-function usePrompt(el){
-  const input = document.getElementById('ideaInput');
-  input.value = el.textContent;
-  input.focus();
-  updateChar();
-  // cursor to end
-  const len = input.value.length;
-  input.setSelectionRange(len, len);
+function skipSetup() {
+  localMode = true;
+  hideBanner();
+  setSyncStatus('local');
 }
 
-function showToast(msg){
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'), 2000);
+function hideBanner() {
+  document.getElementById('setupBanner').style.display = 'none';
 }
 
-// ── post note ─────────────────────────────────────────────────
-function postNote(){
+function init() {
+  fetchNotes();
+  setInterval(fetchNotes, 8000);
+}
+
+// ── 讀取：GET ?action=read ─────────────────────
+async function fetchNotes() {
+  setSyncStatus('loading');
+  try {
+    const res  = await fetch(gasUrl + '?action=read');
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.error);
+    setSyncStatus('live');
+    const newNotes = data.notes.filter(n => !notes.find(e => e.id === n.id));
+    newNotes.forEach(n => { notes.push(n); renderNote(n); renderListItem(n); });
+    if (newNotes.length) updateCount();
+  } catch(err) {
+    setSyncStatus('error');
+    console.error('fetchNotes error:', err);
+  }
+}
+
+// ── 新增：GET ?action=write&name=…&text=…&ci=… ──
+//  用 GET 取代 POST，繞過 GAS 的 CORS 限制
+async function postNote() {
   const text = document.getElementById('ideaInput').value.trim();
-  if(!text){ showToast('請先寫下你的想法 ✏️'); return; }
+  if (!text) { showToast('請先寫下你的想法 ✏️'); return; }
 
   const name = document.getElementById('nameInput').value.trim() || '匿名';
-  const ci = colorCursor % COLORS.length;
+  const ci   = colorCursor % COLORS.length;
   colorCursor++;
+  const timeStr = new Date().toLocaleTimeString('zh-TW', { hour:'2-digit', minute:'2-digit' });
 
-  const note = { text, name, ci, id: Date.now(), time: new Date().toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'}) };
-  notes.push(note);
+  const btn = document.getElementById('postBtn');
+  btn.disabled = true; btn.textContent = '傳送中…';
 
-  renderNote(note);
-  renderListItem(note);
-  updateCount();
+  if (localMode) {
+    const note = { id: Date.now(), name, text, ci, time: timeStr };
+    notes.push(note); renderNote(note); renderListItem(note); updateCount();
+    showToast('便利貼貼上去了 ✦');
+  } else {
+    try {
+      const url = gasUrl
+        + '?action=write'
+        + '&name=' + encodeURIComponent(name)
+        + '&text=' + encodeURIComponent(text)
+        + '&ci='   + ci;
+
+      const res  = await fetch(url);
+      const data = await res.json();
+      if (!data.ok) throw new Error(data.error);
+
+      const saved = { ...data.note, time: timeStr };
+      notes.push(saved); renderNote(saved); renderListItem(saved); updateCount();
+      showToast('便利貼貼上去了 ✦');
+      setSyncStatus('live');
+    } catch(err) {
+      showToast('傳送失敗，請重試 ⚠️');
+      setSyncStatus('error');
+      console.error('postNote error:', err);
+    }
+  }
 
   document.getElementById('ideaInput').value = '';
   updateChar();
-  showToast('便利貼貼上去了 ✦');
+  btn.disabled = false; btn.textContent = '貼上去 ✦';
 }
 
-// ── wall render ───────────────────────────────────────────────
-function renderNote(note){
+function renderNote(note) {
   const wall = document.getElementById('wall');
   document.getElementById('wallEmpty').style.display = 'none';
-
   const el = document.createElement('div');
-  el.className = `note ${COLORS[note.ci]}`;
-  el.id = 'note-' + note.id;
-
-  // random position within wall
+  el.className = `note ${COLORS[note.ci % COLORS.length]}`;
   const wallW = wall.offsetWidth;
   const wallH = Math.max(wall.offsetHeight, 500);
   const noteW = Math.min(210, wallW * 0.22);
-  const maxX = wallW - noteW - 32;
-  const x = 20 + Math.random() * maxX;
-  const y = 20 + Math.random() * Math.max(wallH - 220, 60);
+  const x   = 20 + Math.random() * Math.max(wallW - noteW - 32, 10);
+  const y   = 20 + Math.random() * Math.max(wallH - 220, 60);
   const rot = (Math.random() - 0.5) * 9;
-  const zIdx = notes.length + 5;
-
-  el.style.cssText = `left:${x}px;top:${y}px;z-index:${zIdx};--base-rot:rotate(${rot}deg);transform:rotate(${rot}deg);`;
-
-  el.innerHTML = `
-    <div class="note-author">${escHtml(note.name)}</div>
-    <div class="note-text">${escHtml(note.text)}</div>
-    <div class="note-time">${note.time}</div>`;
-
+  const t   = note.time || new Date().toLocaleTimeString('zh-TW', { hour:'2-digit', minute:'2-digit' });
+  el.style.cssText = `left:${x}px;top:${y}px;z-index:${notes.length+5};--base-rot:rotate(${rot}deg);transform:rotate(${rot}deg);`;
+  el.innerHTML = `<div class="note-author">${esc(note.name)}</div><div class="note-text">${esc(note.text)}</div><div class="note-time">${t}</div>`;
   wall.appendChild(el);
 }
 
-// ── list render ───────────────────────────────────────────────
-function renderListItem(note){
+function renderListItem(note) {
   const lv = document.getElementById('listView');
   const el = document.createElement('div');
   el.className = 'list-item';
-  el.innerHTML = `
-    <div class="list-dot" style="background:${DOT_COLORS[note.ci]}"></div>
-    <div>
-      <div class="list-author">${escHtml(note.name)} · ${note.time}</div>
-      <div class="list-text">${escHtml(note.text)}</div>
-    </div>`;
+  el.innerHTML = `<div class="list-dot" style="background:${DOTCOLS[note.ci%DOTCOLS.length]}"></div><div><div class="list-author">${esc(note.name)} · ${note.time||''}</div><div class="list-text">${esc(note.text)}</div></div>`;
   lv.prepend(el);
 }
 
-// ── view toggle ───────────────────────────────────────────────
-function setView(v){
-  currentView = v;
-  document.getElementById('wall').classList.toggle('list-hidden', v === 'list');
-  document.getElementById('listView').classList.toggle('active', v === 'list');
-  document.getElementById('btnWall').classList.toggle('active', v === 'wall');
-  document.getElementById('btnList').classList.toggle('active', v === 'list');
+function setSyncStatus(state) {
+  const dot = document.getElementById('syncDot');
+  const txt = document.getElementById('syncText');
+  dot.className = 'sync-dot';
+  const map = { live:['live','已連線'], loading:['loading','同步中…'], error:['error','連線失敗'], local:['','本機模式'] };
+  const [cls, label] = map[state] || ['','未連線'];
+  if (cls) dot.classList.add(cls);
+  txt.textContent = label;
 }
 
-// ── utils ─────────────────────────────────────────────────────
-function updateCount(){
-  const n = notes.length;
-  document.getElementById('noteCount').textContent = n + (n === 1 ? ' 張便利貼' : ' 張便利貼');
+function setView(v) {
+  document.getElementById('wall').classList.toggle('list-hidden', v==='list');
+  document.getElementById('listView').classList.toggle('active', v==='list');
+  document.getElementById('btnWall').classList.toggle('active', v==='wall');
+  document.getElementById('btnList').classList.toggle('active', v==='list');
 }
 
-function escHtml(s){
-  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+function updateChar() {
+  document.getElementById('charHint').textContent =
+    document.getElementById('ideaInput').value.length + ' / 120';
 }
 
-// ── keyboard shortcut ─────────────────────────────────────────
+function usePrompt(el) {
+  const input = document.getElementById('ideaInput');
+  input.value = el.textContent; input.focus(); updateChar();
+  input.setSelectionRange(input.value.length, input.value.length);
+}
+
+function updateCount() {
+  document.getElementById('noteCount').textContent = notes.length + ' 張便利貼';
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2200);
+}
+
+function esc(s) {
+  return String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
 document.getElementById('ideaInput').addEventListener('keydown', e => {
-  if((e.metaKey || e.ctrlKey) && e.key === 'Enter'){ e.preventDefault(); postNote(); }
+  if ((e.metaKey||e.ctrlKey) && e.key==='Enter') { e.preventDefault(); postNote(); }
 });
 </script>
 </body>
